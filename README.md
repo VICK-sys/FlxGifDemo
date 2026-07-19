@@ -26,7 +26,20 @@ gif.screenCenter();
 add(gif);
 ```
 
-Call `GifCache.clear()` if you need to free decoded GIF memory (e.g. leaving a GIF-heavy state).
+Two playback modes:
+
+- **GifPlayer mode** (default) — YAGP's player composites frames on the fly, honoring per-frame delays exactly.
+- **FlxAnimation mode** (`new GifSprite(x, y, path, true)` or `loadGifAsAnimation`) — all frames are rendered once into a grid spritesheet and played through Flixel's animation system, so the full `animation` API works. Frame rate is derived from the average GIF delay (override with the `frameRate` argument). Sheets over 8192px trigger a warning since some GPUs reject them.
+
+Playback controls on both modes:
+
+- `speed` — playback rate multiplier
+- `paused` — pause/resume
+- `reversed` — reverse playback (FlxAnimation mode only)
+- `gifFrame` — read or seek the current frame
+- `onLoop` / `onComplete` — `FlxSignal`s for loop and finite-animation end
+
+`GifCache.clear()` frees all decoded GIF memory; `GifCache.enableAutoClear()` does it automatically on every state switch.
 
 ## Requirements
 
