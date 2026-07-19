@@ -4,9 +4,9 @@ A small [HaxeFlixel](https://haxeflixel.com/) project that makes animated GIFs "
 
 ## The problem this solves
 
-HaxeFlixel doesn't play GIFs out of the box. There's a community library ([flxgif](https://github.com/MAJigsaw77/flxgif)) that adds GIF playback, but it has a hidden landmine: GIFs downloaded from sites like Giphy are often saved in a compressed style that the library chokes on. Instead of showing an error, the game just freezes on a black screen forever.
+HaxeFlixel doesn't play GIFs out of the box. There's a community library ([flxgif](https://github.com/MAJigsaw77/flxgif)) that adds GIF playback, but it has a hidden issue: GIFs downloaded from sites like Giphy are often saved in a compressed style that the library chokes on. Instead of showing an error, the game just freezes on a black screen forever.
 
-This project fixes that automatically. Every time you build the game, a small script finds all the GIFs in your assets folder and re-saves them with [FFmpeg](https://ffmpeg.org/) (a free video tool) into a plain format the library handles easily. Your original files are never touched — the fixed copies live in a hidden work folder (`.gifcache/`) that the build uses instead. The script remembers which files it already processed, so it only does the work once per file.
+This project fixes that automatically. Every time you build the game, a small script finds all the GIFs in your assets folder and re-saves them with [FFmpeg](https://ffmpeg.org/) (a free video tool) into a plain format the library handles easily. Your original files are never touched. The fixed copies live in a hidden work folder (`.gifcache/`) that the build uses instead. The script remembers which files it already processed, so it only does the work once per file.
 
 To give a sense of the difference: one 5-second Giphy download never finished loading at all in its original form. After the automatic fix-up, the exact same animation loads in about a third of a second.
 
@@ -18,9 +18,9 @@ gif.screenCenter();
 add(gif);
 ```
 
-That's it — the GIF appears and animates. If a GIF is broken and can't be read, you get a small magenta square and a log message instead of a crash, so you can spot the problem and keep working.
+The GIF appears and animates. If a GIF is broken and can't be read, you get a small magenta square and a log message instead of a crash, so you can spot the problem and keep working.
 
-If the same GIF is used in several places, the heavy work of unpacking it happens only once and is shared — extra copies are basically free.
+If the same GIF is used in several places, the heavy work of unpacking it happens only once and is shared. Extra copies are basically free.
 
 ### Playback options
 
@@ -57,5 +57,5 @@ The demo shows the same GIF playing in both modes side by side. SPACE pauses, LE
 ## Good to know
 
 - The first time you build after adding a **new** GIF, the build fixes it up but doesn't package it yet — build once more and it appears. (Edits to existing GIFs show up right away. This is a quirk of build ordering in the Lime toolchain, not something the script can change.)
-- If FFmpeg isn't installed, the build stops with a clear message rather than quietly shipping a GIF that would freeze the game.
+- If FFmpeg isn't installed, the build stops with a clear message rather than quietly producing a GIF that would freeze the game.
 - Very long GIFs in animation mode produce a very large frame-sheet image; the game logs a warning if it gets big enough that some graphics cards might refuse it.
