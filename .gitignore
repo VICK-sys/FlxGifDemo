@@ -1,0 +1,4 @@
+export/
+gif_cache.json
+*.zip
+.DS_Store
