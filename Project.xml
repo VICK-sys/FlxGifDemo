@@ -34,7 +34,7 @@
 	<set name="BUILD_DIR" value="export" />
 	<source path="source" />
 	<assets path="assets" exclude="*.gif" />
-	<assets path="assets" include="*.gif" type="binary" />
+	<assets path=".gifcache/assets" rename="assets" include="*.gif" type="binary" />
 
 	<!-- _______________________________ Libraries ______________________________ -->
 

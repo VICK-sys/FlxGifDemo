@@ -1,7 +1,6 @@
 package;
 
 import flixel.FlxState;
-import flxgif.FlxGifSprite;
 
 class PlayState extends FlxState
 {
@@ -9,15 +8,9 @@ class PlayState extends FlxState
 	{
 		super.create();
 
-		var gif = new FlxGifSprite(0, 0);
-		gif.loadGif("assets/images/giphy.gif");
+		var gif = new GifSprite(0, 0, AssetPaths.giphy__gif);
 		gif.antialiasing = true;
 		gif.screenCenter();
 		add(gif);
-	}
-
-	override public function update(elapsed:Float)
-	{
-		super.update(elapsed);
 	}
 }

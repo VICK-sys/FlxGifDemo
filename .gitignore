@@ -1,4 +1,6 @@
 export/
-gif_cache.json
+.gifcache/**
+!.gifcache/assets/
+!.gifcache/assets/.gitkeep
 *.zip
 .DS_Store
