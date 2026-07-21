@@ -60,6 +60,11 @@ class GifCache
 		renderer.dispose();
 
 		var map:GifMap = {data: data, width: gif.width, height: gif.height, frames: [for (f in gif.frames) f.delay]};
+
+		var graphic = FlxG.bitmap.add(map.data, false, "gifmap:" + path);
+		graphic.persist = true;
+		graphic.destroyOnNoUse = false;
+
 		maps.set(path, map);
 		return map;
 	}
