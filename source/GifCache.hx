@@ -4,11 +4,14 @@ import com.yagp.Gif;
 import com.yagp.GifDecoder;
 import com.yagp.GifRenderer;
 import flixel.FlxG;
+import flixel.util.FlxSignal;
 import openfl.display.BitmapData;
 import openfl.utils.Assets;
 
 class GifCache
 {
+	public static var onCleared(default, null):FlxSignal = new FlxSignal();
+
 	static var gifs:Map<String, Gif> = [];
 	static var maps:Map<String, GifMap> = [];
 	static var autoClearEnabled:Bool = false;
@@ -46,8 +49,8 @@ class GifCache
 		var n = gif.frames.length;
 		var cols = Std.int(Math.ceil(Math.sqrt(n)));
 		var rows = Std.int(Math.ceil(n / cols));
-		if (gif.width * cols > 8192 || gif.height * rows > 8192)
-			FlxG.log.warn('GifCache: spritesheet for "$path" exceeds 8192px, may fail on some GPUs');
+		if (gif.width * cols > 4096 || gif.height * rows > 4096)
+			FlxG.log.warn('GifCache: spritesheet for "$path" exceeds 4096px, may fail on older or mobile GPUs');
 
 		var data = new BitmapData(gif.width * cols, gif.height * rows, true, 0);
 		var renderer = new GifRenderer(gif);
@@ -78,5 +81,7 @@ class GifCache
 		for (path in maps.keys())
 			FlxG.bitmap.removeByKey("gifmap:" + path);
 		maps.clear();
+
+		onCleared.dispatch();
 	}
 }

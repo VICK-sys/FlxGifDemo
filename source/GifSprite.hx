@@ -4,6 +4,7 @@ import com.yagp.GifPlayer;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.graphics.FlxGraphic;
+import flixel.math.FlxMath;
 import flixel.util.FlxColor;
 import flixel.util.FlxSignal;
 
@@ -20,10 +21,15 @@ class GifSprite extends FlxSprite
 
 	var baseFrameRate:Float = 30;
 	var lastFrameIndex:Int = 0;
+	var gifPath:String;
+	var animMode:Bool = false;
+	var customFrameRate:Null<Float>;
+	var needsReload:Bool = false;
 
 	public function new(?x:Float = 0, ?y:Float = 0, ?path:String, asAnimation:Bool = false)
 	{
 		super(x, y);
+		GifCache.onCleared.add(onCacheCleared);
 		if (path != null)
 		{
 			if (asAnimation)
@@ -36,6 +42,8 @@ class GifSprite extends FlxSprite
 	public function loadGif(path:String):GifSprite
 	{
 		cleanup();
+		gifPath = path;
+		animMode = false;
 
 		var gif = GifCache.get(path);
 		if (gif == null)
@@ -52,6 +60,9 @@ class GifSprite extends FlxSprite
 	public function loadGifAsAnimation(path:String, ?frameRate:Float):GifSprite
 	{
 		cleanup();
+		gifPath = path;
+		animMode = true;
+		customFrameRate = frameRate;
 
 		var map = GifCache.getMap(path);
 		if (map == null)
@@ -74,6 +85,15 @@ class GifSprite extends FlxSprite
 
 	override public function update(elapsed:Float):Void
 	{
+		if (needsReload)
+		{
+			needsReload = false;
+			if (animMode)
+				loadGifAsAnimation(gifPath, customFrameRate);
+			else
+				loadGif(gifPath);
+		}
+
 		if (player != null && !paused)
 			player.update(elapsed * speed);
 
@@ -90,10 +110,17 @@ class GifSprite extends FlxSprite
 
 	override public function destroy():Void
 	{
+		GifCache.onCleared.remove(onCacheCleared);
 		super.destroy();
 		cleanup();
 		onLoop.removeAll();
 		onComplete.removeAll();
+	}
+
+	function onCacheCleared():Void
+	{
+		if (gifPath != null)
+			needsReload = true;
 	}
 
 	function cleanup():Void
@@ -114,6 +141,7 @@ class GifSprite extends FlxSprite
 
 	function set_speed(value:Float):Float
 	{
+		value = FlxMath.bound(value, 0.05, 10);
 		speed = value;
 		if (animated && animation.curAnim != null)
 			animation.curAnim.frameRate = baseFrameRate * value;

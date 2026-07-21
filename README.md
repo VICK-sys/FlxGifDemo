@@ -58,4 +58,9 @@ The demo shows the same GIF playing in both modes side by side. SPACE pauses, LE
 
 - The first time you build after adding a **new** GIF, the build fixes it up but doesn't package it yet — build once more and it appears. (Edits to existing GIFs show up right away. This is a quirk of build ordering in the Lime toolchain, not something the script can change.)
 - If FFmpeg isn't installed, the build stops with a clear message rather than quietly producing a GIF that would freeze the game.
-- Very long GIFs in animation mode produce a very large frame-sheet image; the game logs a warning if it gets big enough that some graphics cards might refuse it.
+- GIFs with transparent backgrounds work in both playback modes — transparency survives the fix-up step.
+- If a GIF sprite is kept alive across screen changes while automatic memory clearing is on, it quietly reloads its GIF instead of breaking.
+- `speed` is clamped to a sane range (0.05×–10×), so a stray value can't silently freeze playback.
+- Jumping to an **earlier** frame in normal mode is slow (the player has to rebuild from the start). If you need scrubbing, use animation mode.
+- Very long GIFs in animation mode produce a very large frame-sheet image; the game logs a warning past 4096px, the size where older or mobile graphics cards start refusing textures.
+- Deleting a GIF from assets removes it from future builds, but a stale copy can linger in the `export/` folder until the next build overwrites it.
