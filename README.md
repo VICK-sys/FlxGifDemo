@@ -2,7 +2,7 @@
 
 Animated GIF playback for [HaxeFlixel](https://haxeflixel.com/). Put a GIF in `assets/images`, load it with `GifSprite`, and it plays. GIFs are normalized automatically at build time; no manual conversion is needed.
 
-![Demo: the same GIF playing in both modes](screenshots/demo.png)
+![Demo: the same GIF playing in both modes](screenshots/demo.gif)
 
 ## Background
 
