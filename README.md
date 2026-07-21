@@ -1,16 +1,16 @@
 # FlxGifDemo
 
-A small [HaxeFlixel](https://haxeflixel.com/) project that makes animated GIFs "just work" in your game. Drop a GIF file into the `assets/images` folder, load it with one line of code, and it plays — no converting, no fiddling.
+Animated GIF playback for [HaxeFlixel](https://haxeflixel.com/). Put a GIF in `assets/images`, load it with `GifSprite`, and it plays. GIFs are normalized automatically at build time; no manual conversion is needed.
 
-## The problem this solves
+## Background
 
-HaxeFlixel doesn't play GIFs out of the box. There's a community library ([flxgif](https://github.com/MAJigsaw77/flxgif)) that adds GIF playback, but it has a hidden issue: GIFs downloaded from sites like Giphy are often saved in a compressed style that the library chokes on. Instead of showing an error, the game just freezes on a black screen forever.
+HaxeFlixel does not play GIFs out of the box. The community library [flxgif](https://github.com/MAJigsaw77/flxgif) adds GIF playback, but its YAGP decoder hangs indefinitely on certain frame-delta encodings, common in files from giphy.com and similar sites. The failure shows as a permanent black screen with no error.
 
-This project fixes that automatically. Every time you build the game, a small script finds all the GIFs in your assets folder and re-saves them with [FFmpeg](https://ffmpeg.org/) (a free video tool) into a plain format the library handles easily. Your original files are never touched. The fixed copies live in a hidden work folder (`.gifcache/`) that the build uses instead. The script remembers which files it already processed, so it only does the work once per file.
+This project works around that with a prebuild step: on every build, `tools/normalize-gifs.ps1` re-encodes each GIF in `assets/` with [FFmpeg](https://ffmpeg.org/) into a plain format the decoder handles. Source files are not modified; the normalized copies are staged in a gitignored `.gifcache/` folder that the build packages instead. An MD5 cache skips files that are already processed.
 
-To give a sense of the difference: one 5-second Giphy download never finished loading at all in its original form. After the automatic fix-up, the exact same animation loads in about a third of a second.
+Measured difference: a 5-second GIF from giphy.com never finished decoding in its original form and decodes in about 360ms after normalization.
 
-## Showing a GIF in your game
+## Usage
 
 ```haxe
 var gif = new GifSprite(0, 0, AssetPaths.giphy__gif);
@@ -18,49 +18,46 @@ gif.screenCenter();
 add(gif);
 ```
 
-The GIF appears and animates. If a GIF is broken and can't be read, you get a small magenta square and a log message instead of a crash, so you can spot the problem and keep working.
+A file that fails to decode shows a magenta placeholder and logs a warning instead of crashing.
 
-If the same GIF is used in several places, the heavy work of unpacking it happens only once and is shared. Extra copies are basically free.
+Decoded GIF data is cached and shared: loading the same file multiple times decodes it once.
 
-### Playback options
+### Playback properties
 
-A `GifSprite` can be controlled while it plays:
+- `speed` — playback rate multiplier (clamped to 0.05–10)
+- `paused` — pause and resume
+- `reversed` — play backwards (animation mode only)
+- `gifFrame` — read or set the current frame
+- `onLoop` / `onComplete` — signals fired on each loop and when a non-looping GIF ends
 
-- `speed` — play faster or slower (2 means double speed)
-- `paused` — freeze and unfreeze
-- `reversed` — play backwards (animation mode only, see below)
-- `gifFrame` — jump to a specific frame
-- `onLoop` / `onComplete` — run your own code every time the GIF loops, or when a non-looping GIF ends
+Two playback modes, selected with the last constructor argument:
 
-There are two ways a GIF can be played, and you pick with the last argument when creating the sprite:
+- **Normal mode** (default) — frames are composited on demand. Lower memory use, exact per-frame timing.
+- **Animation mode** (`new GifSprite(x, y, path, true)`) — all frames are rendered up front into a sprite sheet and played through HaxeFlixel's animation system. Supports reverse playback and frame scrubbing.
 
-- **Normal mode** (default) — frames are drawn one at a time as they're needed. Uses less memory and matches the GIF's exact timing.
-- **Animation mode** (`new GifSprite(x, y, path, true)`) — every frame is laid out on one big image up front, and the GIF plays through HaxeFlixel's regular animation system. This unlocks things like reverse playback and works just like animations you'd make from a sprite sheet.
+`GifCache.clear()` frees decoded data, and `GifCache.enableAutoClear()` clears automatically on every state switch. Sprites that survive a state switch reload their file on the next update.
 
-If you show lots of GIFs and worry about memory, `GifCache.clear()` throws away everything that's been unpacked, and `GifCache.enableAutoClear()` does that automatically whenever the game changes screens.
+## Requirements
 
-## What you need installed
-
-- [Haxe](https://haxe.org/) with [HaxeFlixel](https://haxeflixel.com/documentation/install-haxeflixel/) set up
+- [Haxe](https://haxe.org/) with [HaxeFlixel](https://haxeflixel.com/documentation/install-haxeflixel/)
 - The flxgif library: `haxelib install flxgif`
-- [FFmpeg](https://ffmpeg.org/) installed and available from the command line
-- Windows (the fix-up script is a PowerShell script)
+- [FFmpeg](https://ffmpeg.org/) on PATH
+- Windows (the prebuild script is PowerShell)
 
-## Running the demo
+## Demo
 
 ```
 lime test html5
 ```
 
-The demo shows the same GIF playing in both modes side by side. SPACE pauses, LEFT/RIGHT change speed, R reverses the animation-mode copy.
+The demo plays the same GIF in both modes side by side. SPACE pauses, LEFT/RIGHT change speed, R reverses the animation-mode copy.
 
-## Good to know
+## Notes
 
-- The first time you build after adding a **new** GIF, the build fixes it up but doesn't package it yet — build once more and it appears. (Edits to existing GIFs show up right away. This is a quirk of build ordering in the Lime toolchain, not something the script can change.)
-- If FFmpeg isn't installed, the build stops with a clear message rather than quietly producing a GIF that would freeze the game.
-- GIFs with transparent backgrounds work in both playback modes — transparency survives the fix-up step.
-- If a GIF sprite is kept alive across screen changes while automatic memory clearing is on, it quietly reloads its GIF instead of breaking.
-- `speed` is clamped to a sane range (0.05×–10×), so a stray value can't silently freeze playback.
-- Jumping to an **earlier** frame in normal mode is slow (the player has to rebuild from the start). If you need scrubbing, use animation mode.
-- Very long GIFs in animation mode produce a very large frame-sheet image; the game logs a warning past 4096px, the size where older or mobile graphics cards start refusing textures.
-- Deleting a GIF from assets removes it from future builds, but a stale copy can linger in the `export/` folder until the next build overwrites it.
+- The first build after adding a new GIF stages it but does not package it; it appears on the next build. Edits to existing GIFs apply in the same build. This is Lime build ordering, not something the script can change.
+- If FFmpeg is missing or a conversion fails, the build stops with an error naming the file.
+- Transparency survives normalization and works in both playback modes.
+- Seeking to an earlier frame in normal mode re-composites from frame 0 and is slow; use animation mode for scrubbing.
+- Long GIFs in animation mode produce large sprite sheets. A warning is logged past 4096px, the texture size limit of older and mobile GPUs.
+- Deleting a GIF removes it from future builds, but a stale copy can remain in `export/` until the next build.
+- Normalization re-quantizes the palette. The result is visually identical but not byte-identical; keep originals elsewhere if exact bytes matter.
