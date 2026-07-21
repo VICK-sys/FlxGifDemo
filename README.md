@@ -2,6 +2,8 @@
 
 Animated GIF playback for [HaxeFlixel](https://haxeflixel.com/). Put a GIF in `assets/images`, load it with `GifSprite`, and it plays. GIFs are normalized automatically at build time; no manual conversion is needed.
 
+![Demo: the same GIF playing in both modes](screenshots/demo.png)
+
 ## Background
 
 HaxeFlixel does not play GIFs out of the box. The community library [flxgif](https://github.com/MAJigsaw77/flxgif) adds GIF playback, but its YAGP decoder hangs indefinitely on certain frame-delta encodings, common in files from giphy.com and similar sites. The failure shows as a permanent black screen with no error.
